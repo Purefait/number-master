@@ -19,7 +19,7 @@ function App() {
 
   const [secretCode, setSecretCode] = useState<number[]>([]);
   const [hints, setHints] = useState<any[]>([]);
-  const [currentGuess, setCurrentGuess] = useState<string>('');
+  const [digits, setDigits] = useState<string[]>(['', '', '']);
   const [gameStatus, setGameStatus] = useState<'playing' | 'won' | 'lost'>('playing');
   const [remainingAttempts, setRemainingAttempts] = useState<number>(2);
   const [highlightedNumber, setHighlightedNumber] = useState<number | null>(null);
@@ -45,7 +45,7 @@ function App() {
     const newCode = generateCode();
     setSecretCode(newCode);
     setHints(generateHints(newCode));
-    setCurrentGuess('');
+    setDigits(['', '', '']);
     setGameStatus('playing');
     setRemainingAttempts(2);
     setHighlightedNumber(null);
@@ -57,19 +57,63 @@ function App() {
     setTimeout(() => playClick(), 50);
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (/^[0-9]$/.test(e.key) && currentGuess.length < 3) {
-      playType();
+  const handleDigitChange = (index: number, value: string) => {
+    if (!/^[0-9]$/.test(value) && value !== '') return;
+    
+    const newDigits = [...digits];
+    newDigits[index] = value;
+    setDigits(newDigits);
+    
+    // Si on a entré un chiffre valide et qu'il y a un input suivant, on y va
+    if (value !== '' && index < 2) {
+      const nextInput = document.getElementById(`digit-${index + 1}`);
+      nextInput?.focus();
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, index: number) => {
+    const input = e.currentTarget;
+
+    switch (e.key) {
+      case 'ArrowLeft':
+        if (index > 0) {
+          const prevInput = document.getElementById(`digit-${index - 1}`);
+          prevInput?.focus();
+        }
+        break;
+      case 'ArrowRight':
+        if (index < 2) {
+          const nextInput = document.getElementById(`digit-${index + 1}`);
+          nextInput?.focus();
+        }
+        break;
+      case 'Backspace':
+        if (input.value === '' && index > 0) {
+          const prevInput = document.getElementById(`digit-${index - 1}`);
+          prevInput?.focus();
+        }
+        break;
+      case 'Enter':
+        if (digits.join('').length === 3) {
+          handleSubmit(e);
+        }
+        break;
+      default:
+        if (/^[0-9]$/.test(e.key)) {
+          playType();
+        }
     }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (currentGuess.length !== 3 || gameStatus !== 'playing') return;
-
-    const guess = currentGuess.split('').map(Number);
     
-    if (guess.join('') === secretCode.join('')) {
+    // Vérifier que tous les chiffres sont entrés
+    if (digits.join('').length !== 3 || gameStatus !== 'playing') return;
+
+    const guess = digits.join('');
+    
+    if (guess === secretCode.join('')) {
       setGameStatus('won');
       setTimeout(() => playWin(), 50);
     } else {
@@ -84,14 +128,7 @@ function App() {
       }
     }
     
-    setCurrentGuess('');
-  };
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.replace(/[^0-9]/g, '');
-    if (value.length <= 3) {
-      setCurrentGuess(value);
-    }
+    setDigits(['', '', '']);
   };
 
   return (
@@ -123,46 +160,62 @@ function App() {
         </div>
 
         <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6 shadow-xl mb-8">
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <input
-              type="text"
-              value={currentGuess}
-              onChange={handleInputChange}
-              onKeyDown={handleKeyDown}
-              placeholder={t.placeholder}
-              className="w-full bg-white/20 text-white px-4 py-2 rounded-lg text-center text-2xl tracking-widest placeholder-white/50"
-              disabled={gameStatus !== 'playing'}
-            />
-            
+          <form onSubmit={handleSubmit} className="">
+            <div className="flex justify-center gap-4 mb-4">
+              {[0, 1, 2].map((index) => (
+                <input
+                  key={index}
+                  id={`digit-${index}`}
+                  type="text"
+                  maxLength={1}
+                  value={digits[index]}
+                  onChange={(e) => handleDigitChange(index, e.target.value)}
+                  onKeyDown={(e) => handleKeyDown(e, index)}
+                  className="w-16 h-16 bg-white/20 text-white text-center text-2xl rounded-lg tracking-widest placeholder-white/50"
+                  disabled={gameStatus !== 'playing'}
+                />
+              ))}
+            </div>
             {gameStatus === 'playing' && (
-              <button
-                type="submit"
-                disabled={currentGuess.length !== 3}
-                className="w-full bg-game-yellow text-game-blue hover:bg-opacity-90 disabled:bg-slate-700 disabled:text-slate-400 disabled:cursor-not-allowed py-2 px-4 rounded-lg transition-colors font-semibold"
-              >
-                {t.submit}
-              </button>
+              <div className="flex justify-center gap-4">
+                <button
+                  type="submit"
+                  disabled={digits.join('').length !== 3}
+                  className="bg-game-yellow text-game-blue px-8 py-2 rounded-lg hover:bg-opacity-90 disabled:bg-slate-700 disabled:text-slate-400 disabled:cursor-not-allowed font-semibold"
+                >
+                  {t.submit}
+                </button>
+                <ShareButton
+                  code={secretCode.join('')}
+                  hints={hints}
+                  gameStatus={gameStatus}
+                  remainingAttempts={remainingAttempts}
+                  className="bg-white/20 text-white px-8 py-2 rounded-lg hover:bg-white/30 disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
+                />
+              </div>
             )}
           </form>
 
           {gameStatus !== 'playing' && (
-            <div className={`mt-4 p-4 rounded-lg text-center ${
-              gameStatus === 'won' ? 'bg-game-yellow/20' : 'bg-red-500/20'
+            <div className={`text-center space-y-4 mt-4 p-4 rounded-lg ${
+              gameStatus === 'won' ? 'bg-green-500/20' : 'bg-red-500/20'
             }`}>
-              <p className="text-xl font-bold mb-4">
-                {gameStatus === 'won' ? t.win : `${t.lose} ${secretCode.join('')}`}
+              <p className="text-2xl font-bold mb-4">
+                {gameStatus === 'won' ? t.win : t.lose + ' ' + secretCode.join('')}
               </p>
-              <div className="flex gap-2 justify-center">
+              <div className="flex justify-center gap-4">
                 <button
                   onClick={startNewGame}
-                  className="bg-game-yellow text-game-blue hover:bg-opacity-90 py-2 px-4 rounded-lg transition-colors font-semibold"
+                  className="bg-game-yellow text-game-blue px-8 py-2 rounded-lg hover:bg-opacity-90 font-semibold"
                 >
                   {t.newGame}
                 </button>
                 <ShareButton 
-                  code={secretCode} 
+                  code={secretCode.join('')} 
                   hints={hints}
-                  currentLanguage={currentLang} 
+                  gameStatus={gameStatus}
+                  remainingAttempts={remainingAttempts}
+                  className="bg-white/20 text-white px-8 py-2 rounded-lg hover:bg-white/30 disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
                 />
               </div>
             </div>

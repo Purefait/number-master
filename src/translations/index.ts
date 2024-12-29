@@ -2,8 +2,8 @@ export type Language = 'en' | 'fr' | 'de' | 'es' | 'it';
 
 export interface Translation {
   title: string;
-  rules: string;
   rulesTitle: string;
+  rules: string;
   placeholder: string;
   submit: string;
   win: string;
@@ -15,16 +15,24 @@ export interface Translation {
   noCorrect: string;
   correctWellPlaced: string;
   correctMisplaced: string;
+  correct: string;
+  misplaced: string;
+  noCorrectDigits: string;
+  shareMessage: string;
+  shareError: string;
+  copyError: string;
+  copyFallbackMessage: string;
+  [key: string]: string; // Index signature pour satisfaire Record<string, string>
 }
 
 export const translations: Record<Language, Translation> = {
   en: {
-    title: 'Number Master',
-    rulesTitle: 'How to Play',
-    rules: 'Try to guess the 3-digit code. You have 2 attempts!\n\nAfter each guess, the colors mean:\n• Green: correct digit in correct position\n• Yellow: correct digit in wrong position\n• Red: no correct digits',
+    title: 'Crack the Code',
+    rulesTitle: 'Rules',
+    rules: 'Try to find the secret 3-digit code. After each guess, you will get hints about correct digits.',
     placeholder: 'Enter 3 digits',
     submit: 'Submit',
-    win: 'Congratulations! You won! 🎉',
+    win: 'Congratulations! You found the code!',
     lose: 'Game Over! The code was:',
     newGame: 'New Game',
     share: 'Share',
@@ -33,15 +41,22 @@ export const translations: Record<Language, Translation> = {
     noCorrect: 'No correct digits',
     correctWellPlaced: 'correct and well placed',
     correctMisplaced: 'correct but misplaced',
+    correct: 'correct',
+    misplaced: 'misplaced',
+    noCorrectDigits: 'No correct digits',
+    shareMessage: 'Can you crack this code? Try to solve this puzzle!',
+    copyFallbackMessage: 'Could not copy automatically. Please copy this URL manually:',
+    shareError: 'Failed to share the game',
+    copyError: 'Failed to copy the link',
   },
   fr: {
-    title: 'Maître des Nombres',
-    rulesTitle: 'Comment Jouer',
-    rules: 'Essayez de deviner le code à 3 chiffres. Vous avez 2 essais !\n\nAprès chaque essai, les couleurs signifient :\n• Vert : chiffre correct bien placé\n• Jaune : chiffre correct mal placé\n• Rouge : aucun chiffre correct',
+    title: 'Crack the Code',
+    rulesTitle: 'Règles',
+    rules: 'Essayez de trouver le code secret à 3 chiffres. Après chaque essai, vous aurez des indices sur les chiffres corrects.',
     placeholder: 'Entrez 3 chiffres',
     submit: 'Valider',
-    win: 'Félicitations ! Vous avez gagné ! 🎉',
-    lose: 'Partie terminée ! Le code était :',
+    win: 'Félicitations ! Vous avez trouvé le code !',
+    lose: 'Game Over ! Le code était :',
     newGame: 'Nouvelle Partie',
     share: 'Partager',
     copied: 'Copié !',
@@ -49,30 +64,43 @@ export const translations: Record<Language, Translation> = {
     noCorrect: 'Aucun chiffre correct',
     correctWellPlaced: 'correct et bien placé',
     correctMisplaced: 'correct mais mal placé',
+    correct: 'correct',
+    misplaced: 'mal placé',
+    noCorrectDigits: 'Aucun chiffre correct',
+    shareMessage: 'Peux-tu craquer ce code ? Essaie de résoudre ce puzzle !',
+    copyFallbackMessage: 'Impossible de copier automatiquement. Veuillez copier cette URL manuellement :',
+    shareError: 'Impossible de partager le jeu',
+    copyError: 'Impossible de copier le lien',
   },
   de: {
-    title: 'Zahlenmeister',
-    rulesTitle: 'Spielregeln',
-    rules: 'Versuche den 3-stelligen Code zu erraten. Du hast 2 Versuche!\n\nNach jedem Versuch bedeuten die Farben:\n• Grün: richtige Ziffer an richtiger Position\n• Gelb: richtige Ziffer an falscher Position\n• Rot: keine richtigen Ziffern',
-    placeholder: '3 Ziffern eingeben',
-    submit: 'Prüfen',
-    win: 'Glückwunsch! Du hast gewonnen! 🎉',
-    lose: 'Spiel vorbei! Der Code war:',
+    title: 'Crack the Code',
+    rulesTitle: 'Regeln',
+    rules: 'Versuche den geheimen 3-stelligen Code zu finden. Nach jedem Versuch erhältst du Hinweise zu korrekten Ziffern.',
+    placeholder: 'Gib 3 Ziffern ein',
+    submit: 'Absenden',
+    win: 'Glückwunsch! Du hast den Code gefunden!',
+    lose: 'Game Over! Der Code war:',
     newGame: 'Neues Spiel',
     share: 'Teilen',
     copied: 'Kopiert!',
     hints: 'Hinweise',
-    noCorrect: 'Keine richtigen Ziffern',
-    correctWellPlaced: 'richtig und richtig platziert',
-    correctMisplaced: 'richtig aber falsch platziert',
+    noCorrect: 'Keine korrekten Ziffern',
+    correctWellPlaced: 'korrekt und richtig platziert',
+    correctMisplaced: 'korrekt aber falsch platziert',
+    correct: 'korrekt',
+    misplaced: 'falsch platziert',
+    noCorrectDigits: 'Keine korrekten Ziffern',
+    shareMessage: 'Kannst du den Code knacken? Versuche, dieses Rätsel zu lösen!',
+    shareError: 'Failed to share the game',
+    copyError: 'Failed to copy the link',
   },
   es: {
-    title: 'Maestro de Números',
-    rulesTitle: 'Cómo Jugar',
-    rules: 'Intenta adivinar el código de 3 dígitos. ¡Tienes 2 intentos!\n\nDespués de cada intento, los colores significan:\n• Verde: dígito correcto en posición correcta\n• Amarillo: dígito correcto en posición incorrecta\n• Rojo: ningún dígito correcto',
+    title: 'Crack the Code',
+    rulesTitle: 'Reglas',
+    rules: 'Intenta encontrar el código secreto de 3 dígitos. Después de cada intento, recibirás pistas sobre los dígitos correctos.',
     placeholder: 'Ingresa 3 dígitos',
     submit: 'Enviar',
-    win: '¡Felicitaciones! ¡Has ganado! 🎉',
+    win: '¡Felicitaciones! ¡Encontraste el código!',
     lose: '¡Juego terminado! El código era:',
     newGame: 'Nuevo Juego',
     share: 'Compartir',
@@ -81,23 +109,35 @@ export const translations: Record<Language, Translation> = {
     noCorrect: 'Ningún dígito correcto',
     correctWellPlaced: 'correcto y bien ubicado',
     correctMisplaced: 'correcto pero mal ubicado',
+    correct: 'correcto',
+    misplaced: 'mal ubicado',
+    noCorrectDigits: 'Ningún dígito correcto',
+    shareMessage: '¿Puedes descifrar este código? ¡Intenta resolver este rompecabezas!',
+    shareError: 'Failed to share the game',
+    copyError: 'Failed to copy the link',
   },
   it: {
-    title: 'Maestro dei Numeri',
-    rulesTitle: 'Come Giocare',
-    rules: 'Prova a indovinare il codice di 3 cifre. Hai 2 tentativi!\n\nDopo ogni tentativo, i colori significano:\n• Verde: cifra corretta in posizione corretta\n• Giallo: cifra corretta in posizione sbagliata\n• Rosso: nessuna cifra corretta',
+    title: 'Crack the Code',
+    rulesTitle: 'Regole',
+    rules: 'Prova a trovare il codice segreto di 3 cifre. Dopo ogni tentativo, riceverai indizi sulle cifre corrette.',
     placeholder: 'Inserisci 3 cifre',
     submit: 'Invia',
-    win: 'Congratulazioni! Hai vinto! 🎉',
+    win: 'Congratulazioni! Hai trovato il codice!',
     lose: 'Game Over! Il codice era:',
     newGame: 'Nuova Partita',
     share: 'Condividi',
     copied: 'Copiato!',
     hints: 'Indizi',
     noCorrect: 'Nessuna cifra corretta',
-    correctWellPlaced: 'corretta e ben posizionata',
-    correctMisplaced: 'corretta ma mal posizionata',
-  },
+    correctWellPlaced: 'corretto e ben posizionato',
+    correctMisplaced: 'corretto ma mal posizionato',
+    correct: 'corretto',
+    misplaced: 'mal posizionato',
+    noCorrectDigits: 'Nessuna cifra corretta',
+    shareMessage: 'Puoi decifrare questo codice? Prova a risolvere questo puzzle!',
+    shareError: 'Failed to share the game',
+    copyError: 'Failed to copy the link',
+  }
 };
 
 export default translations;

@@ -29,48 +29,80 @@ const generateUniqueNumbers = (exclude: number[]): number[] => {
   return numbers;
 };
 
-// Vérifie si les indices sont cohérents avec le code
-const validateHints = (hints: Hint[], code: number[]): boolean => {
-  // Vérifier que tous les chiffres du code apparaissent au moins une fois dans les indices utiles
-  if (!allCodeNumbersInUsefulHints(hints, code)) {
-    return false;
-  }
+// Trouve tous les codes possibles qui correspondent aux indices donnés
+const findPossibleCodes = (hints: Hint[]): number[][] => {
+  const possibleCodes: number[][] = [];
+  
+  // Teste toutes les combinaisons de 3 chiffres
+  for (let i = 0; i < 10; i++) {
+    for (let j = 0; j < 10; j++) {
+      if (j === i) continue;
+      for (let k = 0; k < 10; k++) {
+        if (k === i || k === j) continue;
+        
+        const testCode = [i, j, k];
+        let matchesAllHints = true;
 
-  // Vérifier que l'indice "aucun chiffre correct" ne contient aucun chiffre du code
-  const noCorrectHint = hints.find(hint => hint.correct === 0 && hint.misplaced === 0);
-  if (noCorrectHint && !containsNoCodeNumbers(noCorrectHint.numbers, code)) {
-    return false;
-  }
+        // Vérifie si le code correspond à tous les indices
+        for (const hint of hints) {
+          const comparison = compareCode(hint.numbers, testCode);
+          if (comparison.correct !== hint.correct || 
+              comparison.misplaced !== hint.misplaced) {
+            matchesAllHints = false;
+            break;
+          }
+        }
 
-  // Vérifier que les indices avec des chiffres bien placés sont cohérents
-  const correctPositionHints = hints.filter(hint => hint.correct > 0);
-  for (const hint of correctPositionHints) {
-    let correctCount = 0;
-    for (let i = 0; i < 3; i++) {
-      if (hint.numbers[i] === code[i]) {
-        correctCount++;
+        if (matchesAllHints) {
+          possibleCodes.push(testCode);
+        }
       }
     }
-    if (correctCount !== hint.correct) {
-      return false;
+  }
+
+  return possibleCodes;
+};
+
+// Vérifie si les indices sont valides et mènent à une solution unique
+const validateHints = (hints: Hint[], targetCode: number[]): boolean => {
+  // Trouve tous les codes qui correspondent aux indices
+  const possibleCodes = findPossibleCodes(hints);
+  
+  // Vérifie qu'il n'y a qu'une seule solution et que c'est le bon code
+  return possibleCodes.length === 1 && 
+         JSON.stringify(possibleCodes[0]) === JSON.stringify(targetCode);
+};
+
+// Compare deux codes et retourne le nombre de chiffres corrects et mal placés
+const compareCode = (guess: number[], code: number[]): { correct: number; misplaced: number } => {
+  const result = { correct: 0, misplaced: 0 };
+  const usedIndices = new Set<number>();
+  const usedGuessIndices = new Set<number>();
+
+  // Vérifie d'abord les chiffres bien placés
+  for (let i = 0; i < code.length; i++) {
+    if (guess[i] === code[i]) {
+      result.correct++;
+      usedIndices.add(i);
+      usedGuessIndices.add(i);
     }
   }
 
-  // Vérifier que les indices avec des chiffres mal placés sont cohérents
-  const misplacedHints = hints.filter(hint => hint.misplaced > 0);
-  for (const hint of misplacedHints) {
-    let misplacedCount = 0;
-    for (let i = 0; i < 3; i++) {
-      if (code.includes(hint.numbers[i]) && hint.numbers[i] !== code[i]) {
-        misplacedCount++;
+  // Vérifie ensuite les chiffres mal placés
+  for (let i = 0; i < code.length; i++) {
+    if (!usedGuessIndices.has(i)) {
+      for (let j = 0; j < code.length; j++) {
+        if (!usedIndices.has(j) && guess[i] === code[j]) {
+          result.misplaced++;
+          usedIndices.add(j);
+          usedGuessIndices.add(i);
+          break;
+        }
       }
     }
-    if (misplacedCount !== hint.misplaced) {
-      return false;
-    }
   }
 
-  return true;
+  return result;
 };
 
 // Génère un tableau de 3 nombres avec exactement un nombre à la bonne position
@@ -138,60 +170,183 @@ const distributeCodeNumbers = (code: number[], hints: Hint[]): void => {
   }
 };
 
+// Vérifie si un indice est cohérent avec le code
+const isHintValid = (hint: number[], code: number[], expectedCorrect: number, expectedMisplaced: number): boolean => {
+  let correct = 0;
+  let misplaced = 0;
+  const usedIndices = new Set<number>();
+  const usedHintIndices = new Set<number>();
+
+  // Vérifie d'abord les chiffres bien placés
+  for (let i = 0; i < code.length; i++) {
+    if (hint[i] === code[i]) {
+      correct++;
+      usedIndices.add(i);
+      usedHintIndices.add(i);
+    }
+  }
+
+  // Vérifie ensuite les chiffres mal placés
+  for (let i = 0; i < hint.length; i++) {
+    if (!usedHintIndices.has(i)) {
+      for (let j = 0; j < code.length; j++) {
+        if (!usedIndices.has(j) && hint[i] === code[j]) {
+          misplaced++;
+          usedIndices.add(j);
+          usedHintIndices.add(i);
+          break;
+        }
+      }
+    }
+  }
+
+  return correct === expectedCorrect && misplaced === expectedMisplaced;
+};
+
+// Génère un indice valide avec le nombre spécifié de chiffres corrects et mal placés
+const generateValidHint = (
+  code: number[],
+  expectedCorrect: number,
+  expectedMisplaced: number,
+  correctPositions: number[] = [],
+  incorrectDigits: number[]
+): number[] => {
+  let attempts = 0;
+  const maxAttempts = 100;
+  
+  while (attempts < maxAttempts) {
+    const hint = Array(3).fill(0);
+    const usedPositions = new Set<number>();
+    const usedDigits = new Set<number>();
+
+    // Place les chiffres corrects aux positions spécifiées
+    for (let i = 0; i < correctPositions.length; i++) {
+      const pos = correctPositions[i];
+      hint[pos] = code[pos];
+      usedPositions.add(pos);
+      usedDigits.add(code[pos]);
+    }
+
+    // Place les chiffres mal placés
+    const availableCodeDigits = code.filter(d => !usedDigits.has(d));
+    for (let i = 0; i < expectedMisplaced; i++) {
+      if (availableCodeDigits.length === 0) break;
+      
+      let pos;
+      do {
+        pos = Math.floor(Math.random() * 3);
+      } while (
+        usedPositions.has(pos) || 
+        code[pos] === availableCodeDigits[0]
+      );
+
+      hint[pos] = availableCodeDigits[0];
+      usedPositions.add(pos);
+      usedDigits.add(availableCodeDigits[0]);
+      availableCodeDigits.shift();
+    }
+
+    // Remplit les positions restantes avec des chiffres incorrects
+    for (let i = 0; i < 3; i++) {
+      if (!usedPositions.has(i)) {
+        let num;
+        do {
+          num = incorrectDigits[Math.floor(Math.random() * incorrectDigits.length)];
+        } while (usedDigits.has(num));
+        hint[i] = num;
+        usedDigits.add(num);
+      }
+    }
+
+    // Vérifie si l'indice est valide
+    if (isHintValid(hint, code, expectedCorrect, expectedMisplaced)) {
+      return hint;
+    }
+
+    attempts++;
+  }
+
+  throw new Error("Impossible de générer un indice valide");
+};
+
+// Vérifie que tous les chiffres du code apparaissent dans les indices utiles
+const allCodeDigitsAppearInHints = (hints: Hint[], code: number[]): boolean => {
+  // On exclut le dernier indice (aucun nombre correct)
+  const usefulHints = hints.slice(0, -1);
+  const allNumbers = new Set(usefulHints.flatMap(hint => hint.numbers));
+  return code.every(digit => allNumbers.has(digit));
+};
+
 // Génère les indices en fonction du code secret
 export const generateHints = (code: number[]): Hint[] => {
   let attempts = 0;
-  let hints: Hint[];
-  
-  do {
-    const correctPosition = Math.floor(Math.random() * 3);
-    
-    hints = [
-      // Premier indice : 1 chiffre correct et bien placé
-      {
-        numbers: generateNumbersWithCorrectPosition(code, correctPosition),
+  const maxAttempts = 100;
+
+  while (attempts < maxAttempts) {
+    try {
+      const hints: Hint[] = [];
+      const incorrectDigits = Array.from({ length: 10 }, (_, i) => i)
+        .filter(n => !code.includes(n));
+
+      // Premier indice : un chiffre correct et bien placé
+      const wellPlacedPosition = Math.floor(Math.random() * 3);
+      const firstHint = generateValidHint(code, 1, 0, [wellPlacedPosition], incorrectDigits);
+      hints.push({
+        numbers: firstHint,
         correct: 1,
         misplaced: 0
-      },
-      // Deuxième indice : 1 chiffre correct mal placé
-      {
-        numbers: generateNumbersWithMisplaced(code, 1),
+      });
+
+      // Deuxième indice : un chiffre correct mal placé
+      const secondHint = generateValidHint(code, 0, 1, [], incorrectDigits);
+      hints.push({
+        numbers: secondHint,
         correct: 0,
         misplaced: 1
-      },
-      // Troisième indice : 1 chiffre correct mal placé (différent du deuxième)
-      {
-        numbers: generateNumbersWithMisplaced(code, 1),
+      });
+
+      // Troisième indice : un chiffre correct mal placé
+      const thirdHint = generateValidHint(code, 0, 1, [], incorrectDigits);
+      hints.push({
+        numbers: thirdHint,
         correct: 0,
         misplaced: 1
-      },
-      // Quatrième indice : 2 chiffres corrects mal placés
-      {
-        numbers: generateNumbersWithMisplaced(code, 2),
+      });
+
+      // Quatrième indice : deux chiffres corrects mal placés
+      const fourthHint = generateValidHint(code, 0, 2, [], incorrectDigits);
+      hints.push({
+        numbers: fourthHint,
         correct: 0,
         misplaced: 2
-      },
-      // Cinquième indice : aucun chiffre correct (DOIT être complètement différent du code)
-      {
-        numbers: generateUniqueNumbers(code),
+      });
+
+      // Cinquième indice : aucun chiffre correct
+      const fifthHint = generateValidHint(code, 0, 0, [], incorrectDigits);
+      hints.push({
+        numbers: fifthHint,
         correct: 0,
         misplaced: 0
+      });
+
+      // Vérifie que tous les chiffres du code apparaissent dans les indices utiles
+      if (!allCodeDigitsAppearInHints(hints, code)) {
+        throw new Error("Tous les chiffres du code doivent apparaître dans les indices");
       }
-    ];
 
-    // S'assurer que tous les chiffres du code sont distribués dans les indices utiles
-    if (!allCodeNumbersInUsefulHints(hints, code)) {
-      distributeCodeNumbers(code, hints);
+      // Vérifie si les indices sont valides et mènent à une solution unique
+      if (!validateHints(hints, code)) {
+        throw new Error("Les indices ne sont pas valides ou ne mènent pas à une solution unique");
+      }
+
+      return hints;
+    } catch (error) {
+      attempts++;
+      if (attempts >= maxAttempts) {
+        throw new Error("Impossible de générer des indices valides après " + maxAttempts + " tentatives");
+      }
     }
-    
-    attempts++;
-  } while (!validateHints(hints, code) && attempts < 10);
-
-  // Si après 10 tentatives on n'a toujours pas des indices valides,
-  // on génère un nouveau code et de nouveaux indices
-  if (!validateHints(hints, code)) {
-    return generateHints(generateCode());
   }
-  
-  return hints;
+
+  throw new Error("Impossible de générer des indices valides");
 };

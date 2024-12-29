@@ -51,11 +51,11 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({ currentLanguage }) 
   };
 
   return (
-    <div className="absolute top-4 right-4">
+    <div className="fixed md:absolute top-4 right-4 z-[1000]">
       <div className="relative">
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 px-3 py-2 rounded-lg transition-colors"
+          className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 px-3 py-2 rounded-lg transition-colors shadow-lg"
         >
           <FlagIcon className="w-6 h-4" />
           <span className="text-sm">{currentLang?.name}</span>
@@ -80,7 +80,7 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({ currentLanguage }) 
               <button
                 key={code}
                 onClick={() => handleLanguageChange(code)}
-                className={`w-full flex items-center gap-2 px-4 py-2 text-left hover:bg-slate-700 transition-colors
+                className={`w-full flex items-center gap-2 px-4 py-3 text-left hover:bg-slate-700 transition-colors
                   ${code === currentLanguage ? 'bg-slate-700' : ''}`}
               >
                 <Icon className="w-6 h-4" />
