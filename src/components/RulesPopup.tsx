@@ -28,6 +28,24 @@ const RulesPopup: React.FC<RulesPopupProps> = ({ rules, title }) => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  const formatRules = (text: string) => {
+    return text.split('\n').map((line, index) => {
+      // Remplacer les mots de couleur par des spans stylés
+      const formattedLine = line
+        .replace(/vert/g, '<span class="font-bold text-green-500">vert</span>')
+        .replace(/orange/g, '<span class="font-bold text-orange-500">orange</span>')
+        .replace(/rouge/g, '<span class="font-bold text-red-500">rouge</span>');
+      
+      return (
+        <p 
+          key={index} 
+          className={index === 0 ? 'mb-4' : 'mb-2'}
+          dangerouslySetInnerHTML={{ __html: formattedLine }}
+        />
+      );
+    });
+  };
+
   return (
     <div className="relative z-50">
       <button
@@ -55,7 +73,9 @@ const RulesPopup: React.FC<RulesPopupProps> = ({ rules, title }) => {
               <IoMdClose className="w-5 h-5" />
             </button>
           </div>
-          <p className="text-sm whitespace-pre-wrap">{rules}</p>
+          <div className="text-game-blue space-y-2">
+            {formatRules(rules)}
+          </div>
         </div>
       )}
     </div>
