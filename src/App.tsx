@@ -11,7 +11,7 @@ import RulesPopup from './components/RulesPopup';
 import { translations, type Language, type Translation } from './translations';
 import { decodeGameState } from './utils/shareState';
 import { Analytics } from "@vercel/analytics/react"
-import { SpeedInsights } from "@vercel/speed-insights/next"
+import { SpeedInsights } from "@vercel/speed-insights/react"
 function App() {
   const { lang, code: sharedState } = useParams<{ lang?: string; code?: string }>();
   const navigate = useNavigate();
