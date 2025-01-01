@@ -30,11 +30,14 @@ const RulesPopup: React.FC<RulesPopupProps> = ({ rules, title }) => {
 
   const formatRules = (text: string) => {
     return text.split('\n').map((line, index) => {
-      // Remplacer les mots de couleur par des spans stylés
+      // Remplacer les mots de couleur par des spans stylés pour toutes les langues
       const formattedLine = line
-        .replace(/vert/g, '<span class="font-bold text-green-500">vert</span>')
-        .replace(/orange/g, '<span class="font-bold text-orange-500">orange</span>')
-        .replace(/rouge/g, '<span class="font-bold text-red-500">rouge</span>');
+        // Vert/Green/Verde/Grün
+        .replace(/\b(green|vert|verde|grün)\b/gi, '<span class="font-bold text-green-500">$1</span>')
+        // Orange/Naranja/Arancione
+        .replace(/\b(orange|naranja|arancione)\b/gi, '<span class="font-bold text-orange-500">$1</span>')
+        // Rouge/Red/Rojo/Rosso/Rot
+        .replace(/\b(red|rouge|rojo|rosso|rot)\b/gi, '<span class="font-bold text-red-500">$1</span>');
       
       return (
         <p 
